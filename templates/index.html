@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asistencia Docente</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --success-color: #10b981;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .login-card {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        h2 { margin-bottom: 0.5rem; color: var(--text-main); }
+
+        #datetime {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            background: #e5e7eb;
+            padding: 8px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        .form-group { text-align: left; margin-bottom: 1.2rem; }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-main);
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            box-sizing: border-box;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-next    { background-color: var(--primary-color); color: white; }
+        .btn-next:hover { background-color: var(--primary-hover); }
+        .btn-submit  { background-color: var(--success-color); color: white; margin-top: 20px; }
+
+        button:disabled { background-color: #9ca3af !important; cursor: not-allowed; }
+
+        .message { padding: 10px; border-radius: 6px; margin-bottom: 1rem; font-size: 0.875rem; }
+        .error   { background-color: #fee2e2; color: #b91c1c; }
+        .warn    { background-color: #fffbeb; color: #92400e; }
+        .success { background-color: #d1fae5; color: #047857; }
+
+        /* Cámara */
+        .camera-container {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px dashed #ccc;
+        }
+        #video, #captured-photo {
+            width: 100%;
+            max-width: 320px;
+            border-radius: 8px;
+            background: #000;
+        }
+        .hidden { display: none; }
+
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-primary   { background: #2563eb; color: white; }
+        .btn-danger    { background: #dc3545; color: white; }
+
+        /* Liveness badge */
+        #liveness-badge {
+            margin: 8px 0;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            background: #f3f4f6;
+            color: #374151;
+            transition: background 0.3s, color 0.3s;
+        }
+        #liveness-badge.confirmed  { background: #d1fae5; color: #047857; }
+        #liveness-badge.warning    { background: #fffbeb; color: #92400e; }
+        #liveness-badge.error      { background: #fee2e2; color: #b91c1c; }
+        #liveness-badge.loading    { background: #eff6ff; color: #1d4ed8; }
+
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+    <h2>Registro de Asistencia</h2>
+    <p id="datetime">Cargando fecha y hora...</p>
+
+    {% if error %}
+        <div class="message error">{{ error }}</div>
+    {% endif %}
+
+    {% if success %}
+        <div class="message success">{{ success }}</div>
+    {% endif %}
+
+    {% if warning %}
+        <div class="message warn">{{ warning }}</div>
+    {% endif %}
+
+    <div class="message warn" id="mensaje-alerta" style="display: none;"></div>
+
+    <form action="/marcarDocente" id="formulario-marcacion" method="post">
+
+        <!-- PASO 1: DATOS -->
+        <div id="paso1" class="fade-in">
+            <div class="form-group">
+                <label for="username">Código de docente</label>
+                <input type="text" id="username" name="codigo" placeholder="Ej: 1234" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Contraseña</label>
+                <input type="password" id="password" name="clave" placeholder="••••••••" required>
+            </div>
+
+            <input type="hidden" id="latitud" name="latitud">
+            <input type="hidden" id="longitud" name="longitud">
+
+            <div id="paso1-error" class="message error" style="display:none;"></div>
+
+            <button type="button" id="boton-paso1" class="btn-next" onclick="irAlPaso2()" disabled>
+                Siguiente ▶
+            </button>
+        </div>
+
+        <!-- PASO 2: CÁMARA -->
+        <div id="paso2" class="hidden fade-in">
+            <label>Validación de Rostro</label>
+            <div class="camera-container">
+                <video id="video" autoplay playsinline></video>
+                <canvas id="canvas" style="display:none;"></canvas>
+
+                <div id="photo-preview" class="hidden">
+                    <img id="captured-photo" src="" alt="Foto capturada">
+                </div>
+
+                <!-- Liveness status badge -->
+                <div id="liveness-badge" class="hidden">Inicializando...</div>
+
+                <div class="camera-controls">
+                    <button type="button" id="retake-photo" class="btn-danger hidden">
+                        Repetir Foto
+                    </button>
+                </div>
+
+                <input type="hidden" name="foto_docente" id="foto_hidden">
+            </div>
+
+            <button type="submit" id="btn-finalizar" class="btn-submit hidden">
+                Marcar Asistencia
+            </button>
+        </div>
+
+    </form>
+</div>
+
+<script>
+    // ── RELOJ ────────────────────────────────────────────────────────────────
+    function updateDateTime() {
+        const el = document.getElementById('datetime');
+        const now = new Date();
+        el.textContent = now.toLocaleString('es-ES', {
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', second: '2-digit'
+        });
+    }
+    setInterval(updateDateTime, 1000);
+    updateDateTime();
+
+    if (window.location.search) {
+        history.replaceState(null, '', window.location.pathname);
+    }
+
+    // ── GEOLOCALIZACIÓN ──────────────────────────────────────────────────────
+    const alerta   = document.getElementById('mensaje-alerta');
+    const btnPaso1 = document.getElementById('boton-paso1');
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            pos => {
+                document.getElementById('latitud').value  = pos.coords.latitude;
+                document.getElementById('longitud').value = pos.coords.longitude;
+                btnPaso1.disabled = false;
+            },
+            () => {
+                alerta.style.display = 'block';
+                alerta.textContent = '⚠ Se requiere ubicación para continuar.';
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+    }
+
+    // ── PASO 2 ───────────────────────────────────────────────────────────────
+    async function irAlPaso2() {
+        const codigo   = document.getElementById('username').value.trim();
+        const clave    = document.getElementById('password').value;
+        const btn      = document.getElementById('boton-paso1');
+        const errorDiv = document.getElementById('paso1-error');
+
+        if (!codigo || !clave) {
+            alert('Por favor, complete sus credenciales.');
+            return;
+        }
+
+        errorDiv.style.display = 'none';
+        btn.disabled    = true;
+        btn.textContent = 'Verificando...';
+
+        try {
+            const body = new FormData();
+            body.append('codigo', codigo);
+            body.append('clave', clave);
+
+            const resp   = await fetch('/api/verificar-paso1', { method: 'POST', body });
+            const result = await resp.json();
+
+            if (!result.ok) {
+                errorDiv.textContent   = result.error;
+                errorDiv.style.display = 'block';
+                return;
+            }
+        } catch {
+            errorDiv.textContent   = 'Error de conexión. Intente nuevamente.';
+            errorDiv.style.display = 'block';
+            return;
+        } finally {
+            btn.disabled    = false;
+            btn.textContent = 'Siguiente ▶';
+        }
+
+        document.querySelectorAll('.message').forEach(el => el.remove());
+        document.getElementById('paso1').classList.add('hidden');
+        document.getElementById('paso2').classList.remove('hidden');
+        await abrirCamara();
+    }
+
+    // ── CÁMARA ───────────────────────────────────────────────────────────────
+    const video         = document.getElementById('video');
+    const canvas        = document.getElementById('canvas');
+    const photoPreview  = document.getElementById('photo-preview');
+    const capturedPhoto = document.getElementById('captured-photo');
+    const fotoHidden    = document.getElementById('foto_hidden');
+    const btnFinalizar  = document.getElementById('btn-finalizar');
+    const btnRetake     = document.getElementById('retake-photo');
+    const liveBadge     = document.getElementById('liveness-badge');
+
+    // ── LIVENESS (verificación contra servidor) ───────────────────────────────
+    // El browser no puede distinguir una cara 3D de una foto 2D con geometría.
+    // La verificación real la hace el backend con DeepFace anti-spoofing
+    // (MiniFASNet), que detecta papel impreso y pantallas por textura y profundidad.
+    //
+    // Flujo:
+    //  1. Cámara activa → cada CHECK_INTERVAL ms se envía un frame al servidor.
+    //  2. El servidor responde {is_real, message}.
+    //  3. Con CONFIRMS_NEEDED respuestas "is_real: true" consecutivas → captura.
+    //  4. Si el servidor detecta foto/pantalla → muestra aviso y reinicia contador.
+
+    let livenessOk      = false;
+    let confirmedCount  = 0;
+    let checkInProgress = false;
+    let checkTimer      = null;
+    let livenessTimeout = null;
+
+    // Estado de detección de movimiento entre frames
+    let prevFramePixels = null;   // copia de los datos RGBA del frame anterior
+    let lowMotionCount  = 0;      // racha de frames sin movimiento suficiente
+
+    const CHECK_INTERVAL    = 2500; // ms entre chequeos al servidor
+    const CONFIRMS_NEEDED   = 2;    // chequeos consecutivos "real" para auto-capturar
+    const MOTION_THRESHOLD  = 1.8;  // diferencia media por canal (0-255); debajo = imagen estática
+    const LOW_MOTION_STREAK = 3;    // racha mínima de frames sin movimiento para alertar
+
+    // ── VOZ ──────────────────────────────────────────────────────────────────
+    function speak(text) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang  = 'es-ES';
+        u.rate  = 1.05;
+        u.pitch = 1.0;
+        const esVoice = window.speechSynthesis.getVoices().find(v => v.lang.startsWith('es'));
+        if (esVoice) u.voice = esVoice;
+        window.speechSynthesis.speak(u);
+    }
+
+    // ── BADGE ────────────────────────────────────────────────────────────────
+    let _badgeText = '';
+    function setBadge(text, cls) {
+        liveBadge.className = cls;
+        liveBadge.classList.remove('hidden');
+        if (text === _badgeText) return;
+        _badgeText = text;
+        liveBadge.textContent = text;
+    }
+
+    // ── VERIFICACIÓN EN TIEMPO REAL ──────────────────────────────────────────
+    function startVerificationLoop() {
+        if (checkTimer !== null) return;
+        // Primer chequeo tras 1 segundo para dar tiempo al video
+        setTimeout(sendFrameForCheck, 1000);
+        checkTimer = setInterval(sendFrameForCheck, CHECK_INTERVAL);
+    }
+
+    function stopVerificationLoop() {
+        if (checkTimer !== null) { clearInterval(checkTimer); checkTimer = null; }
+    }
+
+    // Compara el frame actual con el anterior pixel a pixel (canales R, G, B).
+    // Devuelve la diferencia media por canal (0-255), o null si es el primer frame.
+    // Una imagen estática tendrá ~0; un rostro real tendrá al menos 1-2 por respiración.
+    function getMotionScore(ctx, w, h) {
+        const curr = ctx.getImageData(0, 0, w, h);
+        if (!prevFramePixels || prevFramePixels.length !== curr.data.length) {
+            prevFramePixels = curr.data.slice();
+            return null;
+        }
+        let sum = 0;
+        const len = curr.data.length;
+        for (let i = 0; i < len; i += 4) {
+            sum += Math.abs(curr.data[i]   - prevFramePixels[i]);
+            sum += Math.abs(curr.data[i+1] - prevFramePixels[i+1]);
+            sum += Math.abs(curr.data[i+2] - prevFramePixels[i+2]);
+        }
+        prevFramePixels = curr.data.slice();
+        return sum / (w * h * 3);
+    }
+
+    async function sendFrameForCheck() {
+        if (livenessOk || checkInProgress) return;
+        if (!video.srcObject || video.readyState < 2) return;
+
+        checkInProgress = true;
+        try {
+            const tmp = document.createElement('canvas');
+            tmp.width  = video.videoWidth;
+            tmp.height = video.videoHeight;
+            const tmpCtx = tmp.getContext('2d');
+            tmpCtx.drawImage(video, 0, 0);
+
+            // ── Verificación de movimiento real ──────────────────────────────
+            // Detecta imágenes estáticas (ej: foto mostrada por DroidCam).
+            // Una imagen congelada produce diferencia ~0; un rostro vivo genera
+            // al menos micro-movimientos por respiración y postura.
+            const motionScore = getMotionScore(tmpCtx, tmp.width, tmp.height);
+            if (motionScore !== null && motionScore < MOTION_THRESHOLD) {
+                lowMotionCount++;
+                if (lowMotionCount >= LOW_MOTION_STREAK) {
+                    confirmedCount = 0;
+                    setBadge('⚠ Mueva levemente la cabeza.', 'warning');
+                    if (lowMotionCount === LOW_MOTION_STREAK) {
+                        speak('Sin movimiento real. Mueva la cabeza.');
+                    }
+                }
+                return; // no enviar al servidor hasta detectar movimiento
+            }
+            lowMotionCount = 0;
+            // ────────────────────────────────────────────────────────────────
+
+            const frameData = tmp.toDataURL('image/jpeg', 0.85);
+
+            setBadge('Verificando rostro...', 'loading');
+
+            const body = new FormData();
+            body.append('foto', frameData);
+
+            const resp   = await fetch('/api/verificar-live', { method: 'POST', body });
+            const result = await resp.json();
+
+            if (livenessOk) return; // confirmado mientras esperábamos
+
+            if (result.available === false) {
+                clearTimeout(livenessTimeout);
+                stopVerificationLoop();
+                setBadge('Módulo de verificación no disponible. Recargando...', 'error');
+                speak('Módulo no disponible. Recargando página.');
+                setTimeout(() => location.reload(), 2000);
+                return;
+            }
+
+            if (result.is_real) {
+                confirmedCount++;
+                if (confirmedCount >= CONFIRMS_NEEDED) {
+                    confirmLiveness();
+                } else {
+                    setBadge(`Verificando rostro... (${confirmedCount}/${CONFIRMS_NEEDED})`, 'loading');
+                }
+            } else {
+                if (confirmedCount > 0) speak(result.message);
+                confirmedCount = 0;
+                setBadge(`⚠ ${result.message}`, 'error');
+            }
+        } catch {
+            setBadge('Error de conexión con el servidor', 'error');
+            confirmedCount = 0;
+        } finally {
+            checkInProgress = false;
+        }
+    }
+
+    // ── CAPTURA Y CONFIRMACIÓN ────────────────────────────────────────────────
+    function capturePhoto() {
+        const ctx = canvas.getContext('2d');
+        canvas.width  = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+        capturedPhoto.src = dataUrl;
+        fotoHidden.value  = dataUrl;
+
+        video.classList.add('hidden');
+        photoPreview.classList.remove('hidden');
+        btnRetake.classList.remove('hidden');
+        btnFinalizar.classList.remove('hidden');
+        liveBadge.classList.add('hidden');
+    }
+
+    function confirmLiveness() {
+        livenessOk = true;
+        clearTimeout(livenessTimeout);
+        stopVerificationLoop();
+        speak('Rostro verificado. Capturando foto.');
+        setBadge('Rostro verificado ✓  Capturando...', 'confirmed');
+        setTimeout(capturePhoto, 800);
+    }
+
+    // ── CONTROLES DE CÁMARA ──────────────────────────────────────────────────
+    async function abrirCamara() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+                audio: false,
+            });
+            video.srcObject = stream;
+            liveBadge.classList.remove('hidden');
+            setBadge('Iniciando verificación...', 'loading');
+
+            video.addEventListener('playing', () => {
+                startVerificationLoop();
+                livenessTimeout = setTimeout(() => {
+                    if (!livenessOk) {
+                        stopVerificationLoop();
+                        setBadge('Tiempo agotado. Recargando...', 'error');
+                        speak('Tiempo agotado. Recargando página.');
+                        setTimeout(() => location.reload(), 2000);
+                    }
+                }, 40000);
+            }, { once: true });
+        } catch {
+            alert('Error al acceder a la cámara. Asegúrese de dar permisos.');
+        }
+    }
+
+    btnRetake.addEventListener('click', () => {
+        livenessOk      = false;
+        confirmedCount  = 0;
+        checkInProgress = false;
+        _badgeText      = '';
+        prevFramePixels = null;
+        lowMotionCount  = 0;
+        clearTimeout(livenessTimeout);
+
+        video.classList.remove('hidden');
+        photoPreview.classList.add('hidden');
+        btnRetake.classList.add('hidden');
+        btnFinalizar.classList.add('hidden');
+        fotoHidden.value = '';
+
+        setBadge('Reiniciando verificación...', 'loading');
+        liveBadge.classList.remove('hidden');
+        startVerificationLoop();
+
+        livenessTimeout = setTimeout(() => {
+            if (!livenessOk) {
+                stopVerificationLoop();
+                setBadge('Tiempo agotado. Recargando...', 'error');
+                speak('Tiempo agotado. Recargando página.');
+                setTimeout(() => location.reload(), 2000);
+            }
+        }, 40000);
+    });
+</script>
+
+</body>
+</html>

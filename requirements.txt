@@ -1,0 +1,9 @@
+flask
+python-dotenv
+pyodbc
+deepface>=0.0.79
+opencv-python
+tf-keras
+numpy
+torch
+torchvision

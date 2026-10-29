@@ -1,0 +1,2 @@
+-- No se requiere migración: 'PENDIENTE' y 'PROCESANDO' caben en el VARCHAR original.
+-- Este archivo se deja vacío intencionalmente.

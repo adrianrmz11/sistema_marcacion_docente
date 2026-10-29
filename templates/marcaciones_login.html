@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso — Panel de Marcaciones</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Design Tokens: Linear/Modern System */
+            --bg-deep: #020203;
+            --bg-base: #050506;
+            --bg-elevated: #0a0a0c;
+            --surface: rgba(255, 255, 255, 0.05);
+            --surface-hover: rgba(255, 255, 255, 0.08);
+            --foreground: #EDEDEF;
+            --foreground-muted: #8A8F98;
+            --accent: #5E6AD2;
+            --accent-bright: #6872D9;
+            --accent-glow: rgba(94, 106, 210, 0.25);
+            --border-default: rgba(255, 255, 255, 0.06);
+            --border-hover: rgba(255, 255, 255, 0.12);
+            --easing: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-base);
+            color: var(--foreground);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            overflow: hidden;
+        }
+
+        /* --- BACKGROUND SYSTEM (Atmospheric Layers) --- */
+        .ambient-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: radial-gradient(ellipse at center, #0a0a14 0%, #050506 70%, #020203 100%);
+        }
+
+        .ambient-blob {
+            position: absolute;
+            width: 1000px;
+            height: 1000px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            filter: blur(80px);
+        }
+
+        .grid-overlay {
+            position: absolute;
+            inset: 0;
+            background-image: linear-gradient(var(--border-default) 1px, transparent 1px), 
+                              linear-gradient(90deg, var(--border-default) 1px, transparent 1px);
+            background-size: 64px 64px;
+            opacity: 0.15;
+            mask-image: radial-gradient(circle at center, black, transparent 75%);
+        }
+
+        /* --- THE CARD --- */
+        .card {
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
+            border: 1px solid var(--border-default);
+            border-radius: 20px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 420px;
+            position: relative;
+            box-shadow: 
+                0 0 0 1px rgba(255, 255, 255, 0.02),
+                0 4px 24px rgba(0, 0, 0, 0.6),
+                0 32px 64px rgba(0, 0, 0, 0.4);
+            animation: fadeInCard 0.6s var(--easing) forwards;
+        }
+
+        @keyframes fadeInCard {
+            from { opacity: 0; transform: translateY(12px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* --- SIGNATURE BRAND ICON --- */
+        .logo-container {
+            width: 44px;
+            height: 44px;
+            background: #0a0a0c;
+            border: 1px solid var(--border-hover);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 28px;
+            position: relative;
+            box-shadow: inset 0 1px 0px rgba(255,255,255,0.1);
+        }
+
+        .logo-shape {
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--accent);
+            border-radius: 3px;
+            transform: rotate(45deg);
+            position: relative;
+        }
+        
+        .logo-shape::after {
+            content: '';
+            position: absolute;
+            inset: 2px;
+            background: var(--accent);
+            opacity: 0.5;
+        }
+
+        /* --- TYPOGRAPHY --- */
+        h2 {
+            font-size: 1.6rem;
+            font-weight: 600;
+            letter-spacing: -0.03em;
+            background: linear-gradient(to bottom, #FFFFFF 0%, rgba(255, 255, 255, 0.75) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 0.875rem;
+            color: var(--foreground-muted);
+            margin-bottom: 32px;
+        }
+
+        /* --- FORM PATTERNS --- */
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            font-size: 0.75rem;
+            font-family: monospace;
+            font-weight: 600;
+            color: var(--foreground-muted);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        input {
+            width: 100%;
+            background: #09090b;
+            border: 1px solid var(--border-default);
+            border-radius: 8px;
+            padding: 12px 14px;
+            color: var(--foreground);
+            font-size: 0.92rem;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.20s var(--easing);
+        }
+
+        input:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        input:focus {
+            border-color: var(--accent);
+            background: #0c0c0f;
+            box-shadow: 0 0 0 3px rgba(94, 106, 210, 0.15);
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.25);
+        }
+
+        /* --- INTERACTIONS: INTERACTIVE CTA --- */
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.92rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 12px;
+            position: relative;
+            transition: all 0.2s var(--easing);
+            box-shadow: 
+                0 0 0 1px rgba(94, 106, 210, 0.4),
+                0 4px 12px rgba(94, 106, 210, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-login:hover {
+            background: var(--accent-bright);
+            box-shadow: 
+                0 0 0 1px rgba(94, 106, 210, 0.6),
+                0 0 24px rgba(94, 106, 210, 0.45),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-login:active {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
+
+        /* --- ERROR STATE TREATMENT --- */
+        .error-msg {
+            background: rgba(239, 68, 68, 0.07);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 8px;
+            padding: 12px 14px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: shake 0.4s var(--easing);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="ambient-bg">
+    <div class="grid-overlay"></div>
+    <div class="ambient-blob"></div>
+</div>
+
+<div class="card">
+    <div class="logo-container">
+        <div class="logo-shape"></div>
+    </div>
+    
+    <h2>Panel de Marcaciones</h2>
+    <p class="subtitle">Ingrese sus credenciales de administrador</p>
+
+    {% if error %}
+        <div class="error-msg">
+            <span style="font-size: 1.1rem; line-height: 1;">✕</span>
+            <span>{{ error }}</span>
+        </div>
+    {% endif %}
+
+    <form method="post" action="/marcaciones/login">
+        <div class="form-group">
+            <label for="usuario">ID de Usuario</label>
+            <input type="text" id="usuario" name="usuario"
+                   placeholder="nombre.usuario" autocomplete="username" required autofocus>
+        </div>
+        <div class="form-group">
+            <label for="clave">Clave de Seguridad</label>
+            <input type="password" id="clave" name="clave"
+                   placeholder="••••••••" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="btn-login">Autenticar ingreso</button>
+    </form>
+</div>
+
+</body>
+</html>

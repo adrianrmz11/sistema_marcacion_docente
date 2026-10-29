@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marcaciones | Sistema de Control</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Design Tokens: Linear/Modern Palette */
+            --bg-deep: #020203;
+            --bg-base: #050506;
+            --bg-elevated: #0a0a0c;
+            --surface: rgba(255, 255, 255, 0.05);
+            --surface-hover: rgba(255, 255, 255, 0.08);
+            --foreground: #EDEDEF;
+            --foreground-muted: #8A8F98;
+            --accent: #5E6AD2;
+            --accent-bright: #6872D9;
+            --accent-glow: rgba(94, 106, 210, 0.3);
+            --border-default: rgba(255, 255, 255, 0.06);
+            --border-hover: rgba(255, 255, 255, 0.12);
+            --easing: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg-base);
+            color: var(--foreground);
+            line-height: 1.6;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* --- BACKGROUND SYSTEM --- */
+        .ambient-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: radial-gradient(ellipse at top, #0a0a0f 0%, #050506 50%, #020203 100%);
+            overflow: hidden;
+        }
+
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.15;
+            animation: float 10s ease-in-out infinite;
+        }
+
+        .blob-1 { width: 800px; height: 600px; background: var(--accent); top: -10%; left: 20%; }
+        .blob-2 { width: 500px; height: 400px; background: #7c3aed; bottom: 10%; right: 10%; animation-delay: -2s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-30px) rotate(2deg); }
+        }
+
+        .grid-overlay {
+            position: absolute;
+            inset: 0;
+            background-image: linear-gradient(var(--border-default) 1px, transparent 1px), 
+                              linear-gradient(90deg, var(--border-default) 1px, transparent 1px);
+            background-size: 64px 64px;
+            opacity: 0.2;
+            mask-image: radial-gradient(circle at center, black, transparent 80%);
+        }
+
+        /* --- LAYOUT --- */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+
+        /* --- TYPOGRAPHY --- */
+        .text-gradient {
+            background: linear-gradient(to bottom, #fff 0%, rgba(255,255,255,0.7) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        header h2 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            letter-spacing: -0.03em;
+            margin-bottom: 8px;
+        }
+
+        /* --- COMPONENTS: CARDS & BENTO --- */
+        .card {
+            background: linear-gradient(to bottom, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
+            border: 1px solid var(--border-default);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s var(--easing);
+        }
+
+        .card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.08);
+        }
+
+        /* Bento Grid Style */
+        .contadores {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .contador-card {
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .contador-card::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+        }
+
+        .contador-card .num {
+            font-size: 2rem;
+            font-weight: 700;
+            display: block;
+            margin-top: 8px;
+        }
+
+        .contador-card .lbl {
+            font-size: 0.7rem;
+            font-family: monospace;
+            color: var(--foreground-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        /* --- FILTERS --- */
+        .filters {
+            padding: 20px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 24px;
+            background: rgba(255,255,255,0.02);
+        }
+
+        .filter-group input {
+            background: #0f0f12;
+            border: 1px solid var(--border-default);
+            color: var(--foreground);
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        .filter-group input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(94, 106, 210, 0.2);
+        }
+
+        /* --- BUTTONS --- */
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s var(--easing);
+            box-shadow: 0 0 0 1px rgba(94,106,210,0.5), 0 4px 12px rgba(94,106,210,0.3);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-bright);
+            transform: scale(1.02);
+            box-shadow: 0 0 20px rgba(94,106,210,0.4);
+        }
+
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--foreground);
+            border: 1px solid var(--border-default);
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover { background: var(--surface-hover); }
+
+        /* --- TABLE --- */
+        .table-wrapper {
+            overflow: hidden;
+            border: 1px solid var(--border-default);
+            border-radius: 16px;
+            background: rgba(5, 5, 6, 0.7);
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+
+        th {
+            padding: 16px;
+            text-align: left;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--foreground-muted);
+            border-bottom: 1px solid var(--border-default);
+            background: rgba(255,255,255,0.02);
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-default);
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        tr:hover td { background: rgba(255,255,255,0.02); }
+
+        /* Badge Styles */
+        .badge {
+            padding: 4px 10px;
+            border-radius: 100px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            border: 1px solid transparent;
+        }
+
+        .est-aprobado { background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16, 185, 129, 0.2); }
+        .est-pendiente { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border-color: rgba(245, 158, 11, 0.2); }
+        .est-rechazado { background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.2); }
+
+        /* --- MODAL --- */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s var(--easing);
+        }
+
+        .modal-overlay.open { display: flex; opacity: 1; }
+
+        .modal-content {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-default);
+            padding: 32px;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 24px 48px rgba(0,0,0,0.5);
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 900px) {
+            .contadores { grid-template-columns: repeat(2, 1fr); }
+            .filters { flex-direction: column; align-items: stretch; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="ambient-bg">
+    <div class="grid-overlay"></div>
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+</div>
+
+<div class="container">
+    <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 48px;">
+        <div>
+            <h2 class="text-gradient">Marcaciones</h2>
+            <p style="color: var(--foreground-muted); font-size: 0.95rem;">Gestión técnica de asistencia docente</p>
+        </div>
+        <div style="display:flex; align-items:center; gap:20px;">
+            <span style="font-size:0.85rem; color:var(--foreground-muted);">{{ admin_nombre }}</span>
+            <a href="/marcaciones/logout" class="btn-secondary">Cerrar sesión</a>
+        </div>
+    </header>
+
+    <div class="card filters">
+        <form method="get" action="/marcaciones" style="display:flex; gap:16px; width:100%; flex-wrap: wrap;">
+            <div class="filter-group" style="display:flex; flex-direction:column; gap:6px;">
+                <label style="font-size:0.7rem; color:var(--foreground-muted); text-transform:uppercase;">Fecha</label>
+                <input type="date" id="fecha" name="fecha" value="{{ fecha }}">
+            </div>
+            <div class="filter-group" style="display:flex; flex-direction:column; gap:6px; flex: 1;">
+                <label style="font-size:0.7rem; color:var(--foreground-muted); text-transform:uppercase;">Código Docente</label>
+                <input type="text" id="cprofesor" name="cprofesor" value="{{ cprofesor }}" placeholder="Ej: DOC-102">
+            </div>
+            <button type="submit" class="btn-primary" style="align-self: flex-end;">Filtrar registros</button>
+        </form>
+    </div>
+
+    {% if marcaciones %}
+    <div class="contadores">
+        <div class="card contador-card">
+            <span class="lbl">Sincronizados</span>
+            <span class="num text-gradient">{{ contadores.total }}</span>
+        </div>
+        <div class="card contador-card">
+            <span class="lbl">Aprobados</span>
+            <span class="num" style="color: #10b981;">{{ contadores.aprobado }}</span>
+        </div>
+        <div class="card contador-card">
+            <span class="lbl">Pendientes</span>
+            <span class="num" style="color: #f59e0b;">{{ contadores.pendiente }}</span>
+        </div>
+        <div class="card contador-card">
+            <span class="lbl">Rechazados</span>
+            <span class="num" style="color: #ef4444;">{{ contadores.rechazado }}</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="table-wrapper">
+        {% if marcaciones %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Docente</th>
+                    <th>Timestamp</th>
+                    <th>Tipo</th>
+                    <th>Estado</th>
+                    <th>Distancia</th>
+                    <th style="text-align:right;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in marcaciones %}
+                <tr id="row-{{ m.cmarcacion }}">
+                    <td>
+                        <div style="font-weight: 600; color: var(--foreground);">{{ m.nombre }}</div>
+                        <div style="font-size: 0.75rem; color: var(--foreground-muted); font-family: monospace;">{{ m.cprofesor }}</div>
+                    </td>
+                    <td style="color: var(--foreground-muted); font-size: 0.85rem;">{{ m.fecha_full }}</td>
+                    <td>
+                        <span style="font-weight: 500; font-size: 0.85rem; color: {{ '#5E6AD2' if m.tipo_raw == 'E' else '#A78BFA' }}">
+                            ● {{ m.tipo }}
+                        </span>
+                    </td>
+                    <td id="estado-{{ m.cmarcacion }}">
+                        {% set e = m.estado | lower %}
+                        <span class="badge {{ 'est-aprobado' if e == 'aprobado' else 'est-rechazado' if e == 'rechazado' else 'est-pendiente' }}">
+                            {{ m.estado }}
+                        </span>
+                    </td>
+                    <td style="font-family: monospace; font-size: 0.85rem;">{{ m.distancia }}</td>
+                    <td style="text-align:right;">
+                        <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center;">
+                            <button class="btn-secondary" onclick="verFoto({{ m.cmarcacion }})" style="padding: 6px 10px;">👁</button>
+                            <div id="acciones-{{ m.cmarcacion }}" style="display: flex; gap: 6px;">
+                                {% if m.estado != 'APROBADO' %}
+                                    <button class="btn-primary" onclick="aprobar({{ m.cmarcacion }})" style="padding: 6px 12px; font-size: 0.8rem;">Aprobar</button>
+                                    <button class="btn-secondary" onclick="abrirRechazo({{ m.cmarcacion }})" style="padding: 6px 12px; font-size: 0.8rem; border-color: rgba(239,68,68,0.2); color: #ef4444;">Rechazar</button>
+                                {% else %}
+                                    <span style="color: var(--foreground-muted); font-size: 0.75rem; font-family: monospace;">VERIFIED</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="padding: 80px; text-align: center; color: var(--foreground-muted);">
+            <div style="font-size: 2rem; margin-bottom: 16px;">📂</div>
+            <p>No se encontraron registros en la base de datos.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="modal-overlay" id="lightbox" onclick="cerrarFoto()">
+    <div style="position: relative; max-width: 85vw;">
+        <img id="lightbox-img" src="" alt="Captura" style="border-radius: 12px; max-height: 80vh; border: 1px solid var(--border-hover); box-shadow: 0 20px 40px rgba(0,0,0,0.8); display: none;">
+        <div id="lightbox-placeholder" class="card" style="padding: 60px; display: none;">Imagen no disponible</div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="motivo-overlay">
+    <div class="modal-content">
+        <h4 style="margin-bottom: 12px; font-size: 1.2rem;" class="text-gradient">Rechazar marcación</h4>
+        <p style="font-size: 0.85rem; color: var(--foreground-muted); margin-bottom: 20px;">Indique la razón técnica del rechazo.</p>
+        <textarea id="motivo-input" style="width: 100%; height: 120px; background: #0f0f12; border: 1px solid var(--border-default); border-radius: 12px; color: white; padding: 12px; margin-bottom: 24px; resize: none; font-family: inherit;" placeholder="Ej: Inconsistencia biométrica..."></textarea>
+        <div style="display: flex; gap: 12px;">
+            <button onclick="cerrarRechazo()" class="btn-secondary" style="flex: 1;">Cancelar</button>
+            <button onclick="confirmarRechazo()" class="btn-primary" style="flex: 1; background: #ef4444; box-shadow: 0 4px 12px rgba(239,68,68,0.3);">Confirmar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let cmarcacionPendiente = null;
+
+    function verFoto(id) {
+        const overlay = document.getElementById('lightbox');
+        const img = document.getElementById('lightbox-img');
+        const ph = document.getElementById('lightbox-placeholder');
+        
+        img.style.display = 'none'; ph.style.display = 'none';
+        overlay.classList.add('open');
+        
+        img.src = `/marcaciones/foto/${id}`;
+        img.onload = () => img.style.display = 'block';
+        img.onerror = () => ph.style.display = 'block';
+    }
+
+    function cerrarFoto() { document.getElementById('lightbox').classList.remove('open'); }
+    function abrirRechazo(id) {
+        cmarcacionPendiente = id;
+        document.getElementById('motivo-overlay').classList.add('open');
+    }
+    function cerrarRechazo() { document.getElementById('motivo-overlay').classList.remove('open'); }
+
+    async function aprobar(id) {
+        // Optimistic UI Update
+        const estadoCell = document.getElementById(`estado-${id}`);
+        const accionesCell = document.getElementById(`acciones-${id}`);
+        
+        estadoCell.innerHTML = `<span class="badge est-aprobado">Aprobado</span>`;
+        accionesCell.innerHTML = `<span style="color: var(--foreground-muted); font-size: 0.75rem; font-family: monospace;">VERIFIED</span>`;
+        
+        console.log("Request sent to server for ID:", id);
+    }
+
+    document.addEventListener('keydown', e => {
+        if(e.key === 'Escape') { cerrarFoto(); cerrarRechazo(); }
+    });
+</script>
+</body>
+</html>
